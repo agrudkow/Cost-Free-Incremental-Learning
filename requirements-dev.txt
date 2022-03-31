@@ -1,0 +1,7 @@
+# Install production packages
+-r ./requirements.txt
+
+flake8
+mypy
+yapf
+

@@ -30,7 +30,7 @@ class AGem(ContinualModel):
     def __init__(self, backbone, loss, args, transform):
         super(AGem, self).__init__(backbone, loss, args, transform)
 
-        self.buffer = Buffer(self.args.buffer_size, self.device)
+        self.buffer = Buffer(self.args.buffer_size, self.device, mode='reservoir')
         self.grad_dims = []
         for param in self.parameters():
             self.grad_dims.append(param.data.numel())

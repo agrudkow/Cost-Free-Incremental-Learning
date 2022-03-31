@@ -3,6 +3,8 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
+
 import torch
 from utils.status import progress_bar, create_stash
 from utils.tb_logger import *
@@ -22,7 +24,7 @@ def data_impression_Lenet5(model: ContinualModel,finished_calss):
     # %% Visualize generated DI samples
     data_result = []
     count = 0
-    home_path = "/Users/mozhgan/Documents/PycharmProjects/CL_DER"
+    home_path = os.environ['HOME_PATH']
     data = sio.loadmat(home_path + '/data/data_imp/Orginal__DI-1.mat')
     for i, l in zip(data['train_images'], data['train_labels']):
         first, second = sorted(np.vstack([np.arange(10), l]).T, key=lambda l: l[1], reverse=True)[:2]
@@ -73,7 +75,7 @@ def data_impression_CIFAR10(model: ContinualModel,finished_calss):
     # %% Visualize generated DI samples
     data_result = []
     count = 0
-    home_path = "/Users/mozhgan/Documents/PycharmProjects/CL_DER"
+    home_path = os.environ['HOME_PATH']
 
 
     labels = np.load('ySoft_T20_40000_lr_0.001_batch100_1500_iterations.npy')
@@ -174,7 +176,7 @@ def data_impression_CIFAR10(model: ContinualModel,finished_calss):
 def data_imp(model: ContinualModel, finished_calss):
     print("")
     print("Data Impression ... ")
-    home_path = "/Users/mozhgan/Documents/PycharmProjects/CL_DER"
+    home_path = os.environ['HOME_PATH']
     try:
         os.mkdir(home_path + "/data/data_impressions_by_me_lenet5/" + str(finished_calss))
     except:
@@ -285,12 +287,12 @@ def train(model: ContinualModel, dataset: ContinualDataset,
     model.net.to(model.device)
     results, results_mask_classes = [], []
 
-    finished_calss = [2,3]
+    # finished_calss = [2,3]
 
     # data_impressions, data_impressions_logits = data_impression_Lenet5(model, finished_calss)
 
 
-    data_impressions, data_impressions_logits = data_impression_CIFAR10(model, finished_calss)
+    # data_impressions, data_impressions_logits = data_impression_CIFAR10(model, finished_calss)
 
     model_stash = create_stash(model, args, dataset)
 
@@ -346,16 +348,16 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         model_stash['epoch_idx'] = 0
 
 
-        finished_calss = np.unique(labels.numpy())
+        # finished_calss = np.unique(labels.numpy())
         # print()
         # print(finished_calss)
         # data_impressions, data_impressions_logits  = data_imp(model, finished_calss)
         # model.update_buffer(data_impressions, data_impressions_logits)
-        data_impressions, data_impressions_logits = data_impression_CIFAR10(model,finished_calss)
+        # data_impressions, data_impressions_logits = data_impression_CIFAR10(model,finished_calss)
         #
         # print(data_impressions.shape)
         # print(data_impressions_logits.shape)
-        model.update_buffer_cifar10(data_impressions, data_impressions_logits)
+        # model.update_buffer_cifar10(data_impressions, data_impressions_logits)
 
 
 

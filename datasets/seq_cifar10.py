@@ -25,7 +25,7 @@ class MyCIFAR10(CIFAR10):
         self.not_aug_transform = transforms.Compose([transforms.ToTensor()])
         super(MyCIFAR10, self).__init__(root, train, transform, target_transform, download)
 
-    def __getitem__(self, index: int) -> Tuple[type(Image), int, type(Image)]:
+    def __getitem__(self, index: int) -> Tuple[Image.Image, int, Image.Image]:
         """
         Gets the requested element from the dataset.
         :param index: index of the element to be returned
