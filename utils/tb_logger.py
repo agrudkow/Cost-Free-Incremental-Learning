@@ -12,7 +12,7 @@ import numpy as np
 
 class TensorboardLogger:
     def __init__(self, args: Namespace, setting: str,
-                 stash: Dict[Any, str]=None) -> None:
+                 stash: Dict[str, Any]=None) -> None:
         from torch.utils.tensorboard import SummaryWriter
 
         self.settings = [setting]

@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin"
+strict = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+mypy_path = "stubs"
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+check_untyped_defs = true
+warn_return_any = true
+no_implicit_optional = true
+ignore_missing_imports = true
+implicit_reexport = true

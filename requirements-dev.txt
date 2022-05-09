@@ -1,7 +1,7 @@
 # Install production packages
 -r ./requirements.txt
 
-flake8
-mypy
-yapf
+mypy~=0.941
+flake8~=4.0.1
+yapf~=0.31.0
 
