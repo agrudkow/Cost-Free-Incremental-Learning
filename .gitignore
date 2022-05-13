@@ -2,6 +2,8 @@
 venv/
 bin/
 .idea
-.vscode
 __pycache__/
 .mypy_cache
+
+# Datasets
+data

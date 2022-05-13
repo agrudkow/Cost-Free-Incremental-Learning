@@ -1,0 +1,43 @@
+{
+    "python.linting.enabled": true,
+    "editor.tokenColorCustomizations": {
+      "textMateRules": [
+        {
+          "scope": "meta.function-call.generic",
+          "settings": {
+            "foreground": "#c4c490"
+          }
+        }
+      ]
+    },
+    "python.defaultInterpreterPath": "venv/bin/python",
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "yapf",
+    "python.formatting.yapfArgs": [
+      "--style={based_on_style: google, column_limit: 120, indent_width: 4}"
+    ],
+    "python.linting.flake8Args": [
+      "--max-line-length=120",
+      "--ignore=E111,E114,W504,E125",
+    ],
+    "python.linting.mypyEnabled": true,
+    "cSpell.words": [
+      "accs",
+      "astype",
+      "CFIL",
+      "cifar",
+      "coef",
+      "dones",
+      "dtype",
+      "lenet",
+      "optim",
+      "probs"
+    ],
+    "cSpell.language": "en,pl",
+    "python.testing.pytestArgs": [
+      "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+  }

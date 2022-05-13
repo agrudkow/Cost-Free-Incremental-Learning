@@ -14,7 +14,7 @@ from datasets.utils.continual_dataset import ContinualDataset
 
 
 def create_stash(model: nn.Module, args: Namespace,
-                 dataset: ContinualDataset) -> Dict[Any, str]:
+                 dataset: ContinualDataset) -> Dict[str, Any]:
     """
     Creates the dictionary where to save the model status.
     :param model: the model
