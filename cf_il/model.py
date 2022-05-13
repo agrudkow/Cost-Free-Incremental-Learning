@@ -1,5 +1,5 @@
 from argparse import Namespace
-from typing import Any
+from typing import Any, Tuple
 
 import torch
 import torch.nn as nn
@@ -18,14 +18,20 @@ class CFIL(ContinualModel):
         'class-il',
     ]
 
+    __image_shape: Tuple[int, int, int]
+
     def __init__(
         self,
         backbone: nn.Module,
         loss: nn.Module,
         args: Namespace,
         transform: torchvision.transforms,
+        image_shape: Tuple[int, int, int],
     ):
         super(CFIL, self).__init__(backbone, loss, args, transform)
+
+        self.__image_shape = image_shape
+
         # Buffer contains synthetic images from RMP
         self.buffer = Buffer(
             buffer_size=self.args.buffer_size,
@@ -70,20 +76,25 @@ class CFIL(ContinualModel):
 
     def recover_memory(
         self,
-        num_tasks: int,
-        num_classes_per_task: int = 2,
+        num_classes: int,
         num_images_per_class: int = 10,
         scale: float = 1,
     ) -> None:
+        net_training_status = self.net.training
+        self.net.eval()
+
         self.buffer.empty()
 
         synth_images, synth_logits = rec_mem(
             model=self.net,
-            num_tasks=num_tasks,
-            num_classes_per_task=num_classes_per_task,
+            num_classes=num_classes,
             num_images_per_class=num_images_per_class,
+            image_shape=self.__image_shape,
             scale=scale,
+            device=self.device,
         )
 
         for img, logits in zip(synth_images, synth_logits):
             self.buffer.add_data(examples=img, logits=logits)
+
+        self.net.train(net_training_status)

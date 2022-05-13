@@ -51,9 +51,9 @@ def train(
 
         if task_idx > 0:
             # Recover past experience
+            current_num_of_trained_classes = task_idx * num_classes_per_task
             model.recover_memory(
-                num_tasks=num_tasks,
-                num_classes_per_task=num_classes_per_task,
+                num_classes=current_num_of_trained_classes,
                 num_images_per_class=args.minibatch_size,  # TODO: change to some resonable parameter
             )
 
@@ -89,14 +89,14 @@ def train(
         model_stash['task_idx'] = task_idx + 1
         model_stash['epoch_idx'] = 0
 
-    # Finish training
-    accs = evaluate(model, dataset)
-    results.append(accs[0])
-    results_mask_classes.append(accs[1])
+        # Finish training
+        accs = evaluate(model, dataset)
+        results.append(accs[0])
+        results_mask_classes.append(accs[1])
 
-    mean_acc = np.mean(accs, axis=1)
-    print_mean_accuracy(mean_acc, task_idx + 1, dataset.SETTING)
+        mean_acc = np.mean(accs, axis=1)
+        print_mean_accuracy(mean_acc, task_idx + 1, dataset.SETTING)
 
-    model_stash['mean_accs'].append(mean_acc)
-    if args.tensorboard:
-        tb_logger.log_accuracy(np.array(accs), mean_acc, args, task_idx)
+        model_stash['mean_accs'].append(mean_acc)
+        if args.tensorboard:
+            tb_logger.log_accuracy(np.array(accs), mean_acc, args, task_idx)

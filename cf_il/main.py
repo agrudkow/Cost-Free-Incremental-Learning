@@ -76,22 +76,8 @@ parser.add_argument(
     '--alpha',
     type=float,
     required=True,
-    help='Penalty weight.',
+    help='Degree of distillation.',
 )
-
-
-def fake_args(args: Namespace) -> Namespace:
-    args.tensorboard = args.tensorboard or True
-    args.dataset = args.dataset or 'seq-cifar10'
-    args.lr = args.lr or 0.001
-    args.momentum = args.momentum or 0.9
-    args.n_epochs = args.n_epochs or 1
-    args.batch_size = args.batch_size or 10
-    args.minibatch_size = args.minibatch_size or 10
-    args.buffer_size = args.buffer_size or 100
-    args.alpha = args.alpha or 0.2
-
-    return args
 
 
 def main():
@@ -105,8 +91,14 @@ def main():
     assert dataset.N_CLASSES_PER_TASK is not None
     num_classes = dataset.N_CLASSES_PER_TASK * dataset.N_TASKS
 
+    image_shape = None
+    if dataset.NAME == 'seq-cifar10':
+        image_shape = (32, 32, 3)
+    else:
+        raise ValueError('Image shape cannot be None.')
+
     # Load model
-    backbone = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)  # False
+    backbone = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False)
     backbone.eval()
     backbone.fc = nn.Linear(512, num_classes)
 
@@ -115,6 +107,7 @@ def main():
         args=args,
         loss=nn.CrossEntropyLoss(),
         transform=dataset.get_transform(),
+        image_shape=image_shape,
     )
 
     train(

@@ -24,6 +24,7 @@
     "python.linting.mypyEnabled": true,
     "cSpell.words": [
       "accs",
+      "astype",
       "CFIL",
       "cifar",
       "coef",

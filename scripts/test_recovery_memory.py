@@ -31,12 +31,12 @@ model.fc = nn.Linear(512, num_classes)
 
 img_noise = recovery_memory(
     model=model,
-    num_tasks=cif.N_TASKS,
+    num_classes=3,
     num_images_per_class=10,
 )[0][0].reshape(32, 32, 3)
 
 print(img_noise.shape)
-#img_noise=img_noise.astype(np.float64)
+# img_noise=img_noise.astype(np.float64)
 plt.imshow(transforms.ToPILImage()(img_noise.astype('uint8')))  # unit8 jest dziwny bez niego wyżej działa
 # https://stackoverflow.com/questions/62617533/trouble-with-pytorchs-topilimage
 plt.show()
