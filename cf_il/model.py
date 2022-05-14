@@ -56,6 +56,7 @@ class CFIL(ContinualModel):
         self.opt.zero_grad()
 
         outputs = self.net(inputs)
+        labels = labels.type(torch.LongTensor)   ### PT
         loss = self.loss(outputs, labels)
 
         print(f'Real dataset loss: {loss}')
@@ -64,7 +65,7 @@ class CFIL(ContinualModel):
             buf_inputs, buf_logits = self.buffer.get_data(self.args.minibatch_size)
             buf_outputs = self.net(buf_inputs)
             synth_loss = F.mse_loss(buf_outputs, buf_logits)
-            print(f'Synthetic dataset loss: {synth_loss}')
+            #print(f'Synthetic dataset loss: {synth_loss}')
             loss += self.args.alpha * synth_loss
 
         print(f'Total loss: {loss}')
@@ -93,6 +94,7 @@ class CFIL(ContinualModel):
             scale=scale,
             device=self.device,
         )
+        
 
         for img, logits in zip(synth_images, synth_logits):
             self.buffer.add_data(examples=img, logits=logits)

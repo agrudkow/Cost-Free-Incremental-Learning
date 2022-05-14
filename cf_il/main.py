@@ -1,5 +1,9 @@
 from argparse import ArgumentParser, Namespace
 
+import sys    ###PT
+sys.path.append("./")  ##PT #print(sys.path)
+
+
 import torch
 import torch.nn as nn
 from cf_il.model import CFIL
@@ -7,6 +11,10 @@ from cf_il.train import train
 
 from datasets import NAMES as DATASET_NAMES, get_dataset
 from datasets.utils.continual_dataset import ContinualDataset
+
+import wandb  ####### PT
+
+
 
 parser = ArgumentParser(description='cf-lr', allow_abbrev=False)
 
@@ -16,6 +24,13 @@ parser.add_argument(
     action='store_true',
     help='Enable tensorboard logging',
 )
+
+parser.add_argument(   ####### PT
+    '--wandb',
+    action='store_true',
+    help='Enable logging in weights&biases',
+)
+
 
 # Dataset
 parser.add_argument(
@@ -84,6 +99,25 @@ def main():
     args = parser.parse_known_args()[0]
 
     # args = fake_args(args)
+    
+    
+    
+    # Launch 5 simulated experiments
+    #total_runs = 1
+    #for run in range(total_runs):
+      # Start a new run to track this script
+      #wandb.init(
+          # Set the project where this run will be logged
+          #project="CF_IL", 
+          # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+          #name=f"experiment_{run}", 
+          # Track hyperparameters and run metadata
+          #config={
+          #"learning_rate": args.lr,
+          #"scale": 1,
+          #"dataset": "seq-cifar10"
+          #})
+  
 
     dataset = get_dataset(args)
     assert isinstance(dataset, ContinualDataset) is True
@@ -113,7 +147,7 @@ def main():
     train(
         model=model,
         dataset=dataset,
-        args=args,
+        args=args,# wandb_writer=wandb,
     )
 
 

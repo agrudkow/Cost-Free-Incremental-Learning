@@ -194,6 +194,7 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False) -> Tu
     model.net.eval()
     accs, accs_mask_classes = [], []
     for k, test_loader in enumerate(dataset.test_loaders):
+        print('k', k)
         if last and k < len(dataset.test_loaders) - 1:
             continue
         correct, correct_mask_classes, total = 0.0, 0.0, 0.0
