@@ -2,10 +2,12 @@
 
 from argparse import Namespace
 from typing import List
+from matplotlib import pyplot as plt
 
 import numpy as np
 
 from cf_il.model import CFIL
+from datasets.seq_cifar10 import SequentialCIFAR10
 from datasets.utils.continual_dataset import ContinualDataset
 from training import evaluate
 from utils.loggers import print_mean_accuracy
@@ -74,6 +76,13 @@ def train(
                     loss = model.observe(inputs, labels, not_aug_inputs, logits)
                 else:
                     inputs, labels, not_aug_inputs = data
+
+                    # NOTE: display image
+                    # transform = SequentialCIFAR10.get_denormalization_transform()
+                    # img = transform(inputs[0])
+                    # img=np.transpose(img, (1, 2, 0))
+                    # plt.imshow(img)
+                    
                     inputs, labels = inputs.to(model.device), labels.to(model.device)
                     not_aug_inputs = not_aug_inputs.to(model.device)
                     loss = model.observe(inputs, labels, not_aug_inputs)
