@@ -1,7 +1,5 @@
 from argparse import Namespace
 from typing import Any, Tuple
-from matplotlib import pyplot as plt
-import numpy as np
 
 import torch
 import torch.nn as nn
@@ -63,7 +61,7 @@ class CFIL(ContinualModel):
         print(f'Real dataset loss: {loss}')
 
         if not self.buffer.is_empty():
-            buf_inputs, buf_logits = self.buffer.get_data(self.args.minibatch_size)
+            buf_inputs, buf_logits = self.buffer.get_data(self.args.buffer_batch_size)
             buf_outputs = self.net(buf_inputs)
             synth_loss = F.mse_loss(buf_outputs, buf_logits)
             print(f'Synthetic dataset loss: {synth_loss}')
@@ -79,8 +77,9 @@ class CFIL(ContinualModel):
     def recover_memory(
         self,
         num_classes: int,
-        num_images_per_class: int = 10,
-        scale: float = 1,
+        eta: float = 0.7,
+        tau: float = 20,
+        scale: Tuple[float, float] = (1.0, 0.1),
     ) -> None:
         net_training_status = self.net.training
         self.net.eval()
@@ -90,10 +89,12 @@ class CFIL(ContinualModel):
         synth_images, synth_logits = rec_mem(
             model=self.net,
             num_classes=num_classes,
-            num_images_per_class=num_images_per_class,
+            buffer_size=self.buffer.buffer_size,
             image_shape=self.__image_shape,
             scale=scale,
             device=self.device,
+            eta=eta,
+            tau=tau,
         )
 
         for img, logits in zip(synth_images, synth_logits):

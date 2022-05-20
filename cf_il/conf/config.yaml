@@ -1,0 +1,21 @@
+wandb:
+  project_name: cf-li
+  entity: cf-li
+  experiment_suffix:
+  experiment_name: test
+  group: tests1
+
+cf_il:
+  tensorboard: True
+  dataset: seq-cifar10
+  validation: False
+  n_epochs: 50
+  lr: 0.1
+  momentum: 0.9
+  batch_size: 32
+  buffer_size: 500
+  buffer_batch_size: 32
+  alpha: 0.3
+  eta: 0.45
+  tau: 20
+  scale: [1.0, 0.1]
