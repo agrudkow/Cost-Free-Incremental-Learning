@@ -1,124 +1,23 @@
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
+import os
 
-import sys    ###PT
-sys.path.append("./")  ##PT #print(sys.path)
-
-
+import hydra
 import torch
 import torch.nn as nn
-from cf_il.model import CFIL
+
+from cf_il.model import CFIL, convNet
 from cf_il.train import train
-
-from datasets import NAMES as DATASET_NAMES, get_dataset
+from cf_il.conf.constants import ROOT_DIR
+from cf_il.conf.config import Config
+from datasets import get_dataset
 from datasets.utils.continual_dataset import ContinualDataset
-
-import wandb  ####### PT
-
+from torchsummary import summary
 
 
-parser = ArgumentParser(description='cf-lr', allow_abbrev=False)
-
-# Logging
-parser.add_argument(
-    '--tensorboard',
-    action='store_true',
-    help='Enable tensorboard logging',
-)
-
-parser.add_argument(   ####### PT
-    '--wandb',
-    action='store_true',
-    help='Enable logging in weights&biases',
-)
-
-
-# Dataset
-parser.add_argument(
-    '--dataset',
-    type=str,
-    required=True,
-    choices=DATASET_NAMES,
-    help='Which dataset to perform experiments on.',
-)
-parser.add_argument(
-    '--validation',
-    action='store_true',
-    help='Test on the validation set',
-)
-
-# Experiments setup
-parser.add_argument(
-    '--lr',
-    type=float,
-    required=True,
-    help='Learning rate.',
-)
-parser.add_argument(
-    '--momentum',
-    type=float,
-    required=True,
-    help='Momentum.',
-)
-parser.add_argument(
-    '--batch_size',
-    type=int,
-    required=True,
-    help='Batch size.',
-)
-parser.add_argument(
-    '--n_epochs',
-    type=int,
-    required=True,
-    help='The number of epochs for each task.',
-)
-
-# Memory buffer
-parser.add_argument(
-    '--buffer_size',
-    type=int,
-    required=True,
-    help='The size of the memory buffer.',
-)
-parser.add_argument(
-    '--minibatch_size',
-    type=int,
-    required=True,
-    help='The batch size of the memory buffer.',
-)
-
-# CF-IL
-parser.add_argument(
-    '--alpha',
-    type=float,
-    required=True,
-    help='Degree of distillation.',
-)
-
-
-def main():
-    args = parser.parse_known_args()[0]
-
-    # args = fake_args(args)
-    
-    
-    
-    # Launch 5 simulated experiments
-    #total_runs = 1
-    #for run in range(total_runs):
-      # Start a new run to track this script
-      #wandb.init(
-          # Set the project where this run will be logged
-          #project="CF_IL", 
-          # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-          #name=f"experiment_{run}", 
-          # Track hyperparameters and run metadata
-          #config={
-          #"learning_rate": args.lr,
-          #"scale": 1,
-          #"dataset": "seq-cifar10"
-          #})
-  
-
+@hydra.main(config_path=os.path.join(ROOT_DIR, "conf"), config_name="config")
+def main(config: Config) -> CFIL:
+    args: Namespace = config.cf_il  # type: ignore
+    print(args)
     dataset = get_dataset(args)
     assert isinstance(dataset, ContinualDataset) is True
     assert dataset.N_TASKS is not None
@@ -128,13 +27,35 @@ def main():
     image_shape = None
     if dataset.NAME == 'seq-cifar10':
         image_shape = (32, 32, 3)
+    elif dataset.NAME =='seq-tinyimg':  # problem with loading this dataset
+        image_shape = (64, 64, 3)
     else:
         raise ValueError('Image shape cannot be None.')
 
+  
+    if args.backbone=="convNet":
+      net= convNet(10).cuda()
+      dim1=4096
+    elif args.backbone=="AlexNet":  ## not suitable for CIFAR
+      net = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=True)
+      #import torchvision.models as models
+      #net =models.alexnet()
+    elif args.backbone=="ResNet18":
+      net = torch.nn.Module = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False)
+      dim1=512
+    elif args.backbone=="ResNet20":
+      from pytorchcv.model_provider import get_model as ptcv_get_model
+      net = ptcv_get_model("resnet20_cifar10", pretrained=True)
+ 
+     
+
     # Load model
-    backbone = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False)
+    backbone: backbone=net
     backbone.eval()
-    backbone.fc = nn.Linear(512, num_classes)
+    if args.backbone!="ResNet20":
+      backbone.fc = nn.Linear(dim1, num_classes)  
+
+    summary(net.cuda(), image_shape)
 
     model = CFIL(
         backbone=backbone,
@@ -147,8 +68,10 @@ def main():
     train(
         model=model,
         dataset=dataset,
-        args=args,# wandb_writer=wandb,
+        args=args,
     )
+
+    return model
 
 
 if __name__ == '__main__':

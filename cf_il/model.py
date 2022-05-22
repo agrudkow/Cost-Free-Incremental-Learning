@@ -56,16 +56,15 @@ class CFIL(ContinualModel):
         self.opt.zero_grad()
 
         outputs = self.net(inputs)
-        labels = labels.type(torch.LongTensor)   ### PT
         loss = self.loss(outputs, labels)
 
         print(f'Real dataset loss: {loss}')
 
         if not self.buffer.is_empty():
-            buf_inputs, buf_logits = self.buffer.get_data(self.args.minibatch_size)
+            buf_inputs, buf_logits = self.buffer.get_data(self.args.buffer_batch_size)
             buf_outputs = self.net(buf_inputs)
             synth_loss = F.mse_loss(buf_outputs, buf_logits)
-            #print(f'Synthetic dataset loss: {synth_loss}')
+            print(f'Synthetic dataset loss: {synth_loss}')
             loss += self.args.alpha * synth_loss
 
         print(f'Total loss: {loss}')
@@ -78,8 +77,9 @@ class CFIL(ContinualModel):
     def recover_memory(
         self,
         num_classes: int,
-        num_images_per_class: int = 10,
-        scale: float = 1,
+        eta: float = 0.7,
+        tau: float = 20,
+        scale: Tuple[float, float] = (1.0, 0.1),
     ) -> None:
         net_training_status = self.net.training
         self.net.eval()
@@ -89,14 +89,50 @@ class CFIL(ContinualModel):
         synth_images, synth_logits = rec_mem(
             model=self.net,
             num_classes=num_classes,
-            num_images_per_class=num_images_per_class,
+            buffer_size=self.buffer.buffer_size,
             image_shape=self.__image_shape,
             scale=scale,
             device=self.device,
+            eta=eta,
+            tau=tau,
         )
-        
 
         for img, logits in zip(synth_images, synth_logits):
             self.buffer.add_data(examples=img, logits=logits)
 
         self.net.train(net_training_status)
+
+class convNet(nn.Module):
+    def __init__(self, num_classes):  
+        super(convNet, self).__init__()
+        self.network = nn.Sequential(
+            nn.Conv2d(3, 32, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2), 
+
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2), 
+            
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2), 
+
+            nn.Flatten(), 
+            nn.Linear(256*4*4, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 10)
+            )
+
+    def forward(self, x):
+        logits=self.network(x)
+        return logits    
+
