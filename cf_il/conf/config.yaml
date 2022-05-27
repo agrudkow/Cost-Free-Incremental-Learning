@@ -1,0 +1,26 @@
+wandb:
+  project_name: cf-li
+  entity: cf-li
+  experiment_suffix:
+  experiment_name: test
+  group: tests1
+
+cf_il:
+  tensorboard: True
+  dataset: seq-cifar10
+  validation: False
+  n_epochs: 50
+  lr: 0.1
+  momentum: 0.9
+  batch_size: 32
+  buffer_size: 1000
+  buffer_batch_size: 32
+  alpha: 0.3
+  eta: 0.45
+  tau: 20
+  scale: [1.0, 0.1]
+  optim_steps: 1500
+  optim_lr: 0.01
+  synth_img_save_dir: synth_images/ds-${cf_il.dataset}_epoch-${cf_il.n_epochs}_alpha-${cf_il.alpha}_optimsteps-${cf_il.optim_steps}_asc
+  synth_img_save_num: 10
+  dirichlet_max_iter: 1000000

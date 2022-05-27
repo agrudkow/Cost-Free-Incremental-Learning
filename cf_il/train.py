@@ -1,5 +1,3 @@
-# Based on training.py file
-
 from argparse import Namespace
 from typing import List
 
@@ -7,10 +5,10 @@ import numpy as np
 
 from cf_il.model import CFIL
 from datasets.utils.continual_dataset import ContinualDataset
-from training import evaluate
 from utils.loggers import print_mean_accuracy
 from utils.status import progress_bar, create_stash
 from utils.tb_logger import TensorboardLogger
+from utils.training import evaluate
 
 
 def train(
@@ -27,10 +25,8 @@ def train(
     assert dataset.N_TASKS is not None
     assert dataset.N_CLASSES_PER_TASK is not None
 
-    # TODO: change to some resonable restriction
-    # Currently model is recovering `num_images_per_class` images for each class
-    # where it is set as args.minibatch_size below.
-    assert args.buffer_size >= args.minibatch_size * dataset.N_CLASSES_PER_TASK
+    # Assure buffer size is sufficient
+    assert args.buffer_size >= dataset.N_CLASSES_PER_TASK
 
     model.net.to(model.device)
 
@@ -52,10 +48,7 @@ def train(
         if task_idx > 0:
             # Recover past experience
             current_num_of_trained_classes = task_idx * num_classes_per_task
-            model.recover_memory(
-                num_classes=current_num_of_trained_classes,
-                num_images_per_class=args.minibatch_size,  # TODO: change to some resonable parameter
-            )
+            model.recover_memory(num_classes=current_num_of_trained_classes,)
 
             # Eval current model
             accs = evaluate(model, dataset, last=True)
