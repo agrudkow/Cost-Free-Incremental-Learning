@@ -1,10 +1,3 @@
-wandb:
-  project_name: cf-li
-  entity: cf-li
-  experiment_suffix:
-  experiment_name: test
-  group: tests1
-
 cf_il:
   tensorboard: True
   dataset: seq-cifar10

@@ -33,6 +33,7 @@
       "dones",
       "dtype",
       "lenet",
+      "logit",
       "logits",
       "omegaconf",
       "optim",

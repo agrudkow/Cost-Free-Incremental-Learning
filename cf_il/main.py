@@ -15,6 +15,7 @@ from datasets.utils.continual_dataset import ContinualDataset
 
 @hydra.main(config_path=os.path.join(ROOT_DIR, "conf"), config_name="config")
 def main(config: Config) -> CFIL:
+    """Main function for calling training of the model."""
     args: Namespace = config.cf_il  # type: ignore
     dataset = get_dataset(args)
     assert isinstance(dataset, ContinualDataset) is True
