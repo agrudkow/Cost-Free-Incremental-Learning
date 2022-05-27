@@ -1,5 +1,5 @@
-from argparse import Namespace
 import os
+from argparse import Namespace
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
@@ -78,6 +78,16 @@ class CFIL(ContinualModel):
         *args: Any,
         **kwargs: Any,
     ) -> float:
+        """
+        Execute training step of backbone network on real data and collected data impressions.
+
+        Args:
+            inputs (torch.Tensor): Input data (real).
+            labels (torch.Tensor): Labels (real).
+
+        Returns:
+            float: Total loss
+        """
 
         self.opt.zero_grad()
 
@@ -104,6 +114,12 @@ class CFIL(ContinualModel):
         self,
         num_classes: int,
     ) -> None:
+        """
+        Run recovery memory.
+
+        Args:
+            num_classes (int): Number of classes which has already been learn by the model.
+        """
         net_training_status = self.net.training
         self.net.eval()
 

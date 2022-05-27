@@ -1,9 +1,18 @@
 from typing import Any, Tuple
+
 import numpy as np
 import numpy.typing as npt
 
 
 def np_softmax(x: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    """Calculate softmax.
+
+    Args:
+        x (npt.NDArray[Any]): Input vector.
+
+    Returns:
+        npt.NDArray[Any]: Vector with softmax applied.
+    """
     return np.exp(x) / sum(np.exp(x))
 
 
@@ -15,6 +24,25 @@ def generate_dirichlet(
     eta: float,
     max_iter: int,
 ) -> npt.NDArray[Any]:
+    """
+    Sample logits from Dirichlet distribution based on vector from similarity matrix of learned classes.
+
+    Args:
+        batch_size (int): Number of sampled to generate.
+        class_id (int): Class ID.
+        scale (Tuple[float, float]): Tuple of scales to be used during computing center of the mass for the Dirichlet
+            distribution. First element will be used for the first half of the classes and second for the rest.
+        similarity_matrix (npt.NDArray[Any]): Similarity matrix.
+        eta (float): Parameter controlling how different sampled logit cant be from original class representation
+            vector.
+        max_iter (int): Maximal amount of iterations of sampling for one logit.
+
+    Raises:
+        Exception: Raised when `max_iter` is exceeded.
+
+    Returns:
+        npt.NDArray[Any]: Array of generated logits.
+    """
     beta = scale[0] if class_id < similarity_matrix.shape[0] // 2 else scale[1]
     x = []
     alpha = similarity_matrix[class_id, :]

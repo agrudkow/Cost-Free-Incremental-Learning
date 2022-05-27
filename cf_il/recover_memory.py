@@ -1,14 +1,14 @@
-from datetime import datetime
 import os
 import random
+from datetime import datetime
 from typing import Any, List, Optional, Tuple
-from matplotlib import pyplot as plt
 
 import numpy as np
 import numpy.typing as npt
 import sklearn.preprocessing as pp
 import torch
 import torch.nn as nn
+from matplotlib import pyplot as plt
 
 from cf_il.generate_dirichlet import generate_dirichlet
 from datasets.seq_cifar10 import SequentialCIFAR10
@@ -29,6 +29,30 @@ def recovery_memory(
     synth_img_save_num: Optional[int],
     dirichlet_max_iter: int,
 ) -> Tuple[npt.NDArray[Any], npt.NDArray[Any]]:
+    """
+    Recover memory for provided model.
+
+    Args:
+        model (nn.Module): Neural network as Torch Module.
+        num_classes (int): Number of classes which has already been learn by the model.
+        image_shape (Tuple[int, int, int]): Image shape of current dataset.
+        device (torch.device): Device for torch tensors.
+        scale (Tuple[float, float]): Tuple of scales to be used during computing center of the mass for the Dirichlet
+            distribution. First element will be used for the first half of the classes and second for the rest.
+        buffer_size (int): Size of the buffer for data impressions.
+        eta (float): Parameter controlling how different sampled logit cant be from original class representation
+            vector.
+        tau (float): Cross Entropy temperature.
+        optim_steps (int): Number of optimization step for generating data impressions.
+        optim_lr (float): Learning rate for optimizer for generating data impressions
+        synth_img_save_dir (Optional[str]): Dir for saving generated data impressions. If `None` data impressions
+            are not saved.
+        synth_img_save_num (Optional[int]): Number of saved data impressions. Data impressions are randomly selected.
+        dirichlet_max_iter (int): Maximal amount of iterations of sampling for one logit.
+
+    Returns:
+        Tuple[npt.NDArray[Any], npt.NDArray[Any]]: Recovered memory in form of synthetic images and logits.
+    """
     num_images_per_class = buffer_size // num_classes
 
     criterion = nn.CrossEntropyLoss()
@@ -84,7 +108,7 @@ def recovery_memory(
             )
 
         for i, l in zip(synth_images, synth_logits):
-            images_all.append(i.reshape((1, *reversed(image_shape))))
+            images_all.append(i.reshape((1, *reversed(image_shape))))  # type: ignore
             logits_all.append(l.reshape((1, sim_matrix.shape[0])))
 
     return (np.array(images_all, dtype=torch.TensorType), np.array(logits_all, dtype=torch.TensorType))
@@ -97,6 +121,16 @@ def save_rand_images(
     samples_num: int,
     dir: str,
 ) -> None:
+    """
+    Save random data impressions.
+
+    Args:
+        images (torch.Tensor): Tensor with generated data impressions.
+        cls_id (int): Class ID. Needed for file name.
+        task (int): Task number. Needed for file name.
+        samples_num (int): Number of data impressions to save.
+        dir (str): Dir for saving data impressions.
+    """
     transform_denorm = SequentialCIFAR10.get_denormalization_transform()
 
     images_ids = random.sample(range(len(images)), samples_num)
