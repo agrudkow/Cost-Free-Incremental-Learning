@@ -1,4 +1,7 @@
-from typing import Any, List, Tuple
+from datetime import datetime
+import os
+import random
+from typing import Any, List, Optional, Tuple
 from matplotlib import pyplot as plt
 
 import numpy as np
@@ -20,17 +23,20 @@ def recovery_memory(
     buffer_size: int,
     eta: float,
     tau: float,
+    optim_steps: int,
+    optim_lr: float,
+    synth_img_save_dir: Optional[str],
+    synth_img_save_num: Optional[int],
+    dirichlet_max_iter: int,
 ) -> Tuple[npt.NDArray[Any], npt.NDArray[Any]]:
     num_images_per_class = buffer_size // num_classes
 
-    transform_denorm = SequentialCIFAR10.get_denormalization_transform()
     criterion = nn.CrossEntropyLoss()
 
     fc_weights = model.fc.weight.detach().cpu().numpy()  # type: ignore[union-attr, operator]
     fc_weights = np.transpose(fc_weights)
     fc_weight_norm = pp.normalize(fc_weights, axis=0)
     sim_matrix = np.matmul(np.transpose(fc_weight_norm), fc_weight_norm)
-    norm_similarity_matrix = (sim_matrix - np.min(sim_matrix)) / (np.max(sim_matrix) - np.min(sim_matrix))
 
     images_all: List[torch.Tensor] = []
     logits_all: List[torch.Tensor] = []
@@ -40,8 +46,9 @@ def recovery_memory(
             batch_size=num_images_per_class,
             class_id=classes,
             scale=scale,
-            similarity_matrix=norm_similarity_matrix,
+            similarity_matrix=sim_matrix,
             eta=eta,
+            max_iter=dirichlet_max_iter,
         )
         rand_img = np.random.uniform(0, 1, size=(num_images_per_class, *reversed(image_shape)))
         rand_img = rand_img.astype(np.float32)
@@ -51,8 +58,11 @@ def recovery_memory(
             device=device,
         )
 
-        opt = torch.optim.Adam(lr=0.01, params=[rand_img_tensor])
-        for _ in range(1500):
+        opt = torch.optim.Adam(lr=optim_lr, params=[rand_img_tensor])
+
+        for i in range(optim_steps):
+            if i % 100 == 0:
+                print(f'Synth image optim step {i+1}/{optim_steps}')
             opt.zero_grad()
             logits = model(rand_img_tensor)
 
@@ -61,21 +71,44 @@ def recovery_memory(
             opt.step()
 
         synth_logits = model(rand_img_tensor).detach().cpu()
-        synth_image = rand_img_tensor.detach().cpu()
+        synth_images = rand_img_tensor.detach().cpu()
 
-        # NOTE: display image
-        # img = transform_denorm(synth_image[0])
-        # img = np.transpose(img.numpy(), (1, 2, 0))
-        # img_min = np.min(img, axis=(0, 1))
-        # img_max = np.max(img, axis=(0, 1))
-        # img = (img - img_min) / (img_max - img_min)
-        # plt.imshow(img)
+        # NOTE: save image
+        if synth_img_save_dir and synth_img_save_num:
+            save_rand_images(
+                images=synth_images,
+                samples_num=synth_img_save_num,
+                task=(num_classes // 2),
+                cls_id=classes,
+                dir=synth_img_save_dir,
+            )
 
-        # TODO: it is rather slow
-        for i, l in zip(synth_image, synth_logits):
+        for i, l in zip(synth_images, synth_logits):
             images_all.append(i.reshape((1, *reversed(image_shape))))
             logits_all.append(l.reshape((1, sim_matrix.shape[0])))
-        # images_all = images_all + [*synth_image]
-        # logits_all = logits_all + [*synth_logits]
 
     return (np.array(images_all, dtype=torch.TensorType), np.array(logits_all, dtype=torch.TensorType))
+
+
+def save_rand_images(
+    images: torch.Tensor,
+    cls_id: int,
+    task: int,
+    samples_num: int,
+    dir: str,
+) -> None:
+    transform_denorm = SequentialCIFAR10.get_denormalization_transform()
+
+    images_ids = random.sample(range(len(images)), samples_num)
+    for id in images_ids:
+        img = transform_denorm(images[id])
+        img = np.transpose(img.numpy(), (1, 2, 0))
+        img_min = np.min(img, axis=(0, 1))
+        img_max = np.max(img, axis=(0, 1))
+        img = (img - img_min) / (img_max - img_min)
+
+        save_time = datetime.now()
+        save_time = datetime.strftime(save_time, "%Y_%m_%d_%H_%M_%S")  # type: ignore
+        path = os.path.join(dir, f'synth_image_task-{task}_class-{cls_id}_{id}_{save_time}.png')
+
+        plt.imsave(path, img)

@@ -24,6 +24,11 @@ class CFILConfig(BaseSettings):
     eta: float
     tau: float
     scale: Tuple[float, float]
+    synth_img_optim_steps: int
+    synth_img_optim_lr: float
+    synth_img_save_dir: Optional[str]
+    synth_img_save_num: Optional[int]
+    dirichlet_max_iter: Optional[int]
 
 
 class Config(BaseSettings):

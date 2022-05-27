@@ -28,13 +28,16 @@
       "CFIL",
       "cifar",
       "coef",
+      "denorm",
+      "denormalization",
       "dones",
       "dtype",
       "lenet",
       "logits",
       "omegaconf",
       "optim",
-      "probs"
+      "probs",
+      "softmax"
     ],
     "cSpell.language": "en,pl",
     "python.testing.pytestArgs": [
